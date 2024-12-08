@@ -1,47 +1,24 @@
----
-name: Semgrep Full Scan
-
 on:
+  workflow_dispatch: {}
+  pull_request: {}
   push:
     branches:
-        - main
-#   schedule:
-#     - cron: "0 1 * * 6"
-
-permissions: 
-    security-events: write
-
+    - main
+    - master
+    paths:
+    - .github/workflows/semgrep.yml
+  schedule:
+  # random HH:MM to avoid a load spike on GitHub Actions at 00:00
+  - cron: 5 17 * * *
+name: Semgrep
 jobs:
-  semgrep-full:
-    runs-on: ubuntu-latest
+  semgrep:
+    name: semgrep/ci
+    runs-on: ubuntu-20.04
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
     container:
       image: returntocorp/semgrep
-
     steps:
-      # step 1
-      - name: Checkout Code
-        uses: actions/checkout@v4.2.2
-
-      # step 2
-      - name: Run Scan
-        env: 
-            SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-        run: |
-          semgrep ci \
-            --sarif --output report.sarif \
-            --metrics=off \
-            --config="p/default"
-
-      # step 3
-      - name: save pipeline artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: report.sarif
-          path: report.sarif
-
-      # step 4
-      - name: publish code scanning alerts
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: report.sarif
-          category: semgrep
+    - uses: actions/checkout@v4
+    - run: semgrep ci
