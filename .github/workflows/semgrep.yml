@@ -24,8 +24,10 @@ jobs:
 
       # step 2
       - name: Run Scan
+        env: 
+            SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         run: |
-          semgrep \
+          semgrep ci \
             --sarif --output report.sarif \
             --metrics=off \
             --config="p/default"
